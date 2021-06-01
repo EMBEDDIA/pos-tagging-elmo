@@ -1,11 +1,7 @@
 from numpy.random import seed
 seed(3)
-#from tensorflow import set_random_seed
-#set_random_seed(3)
-#import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, LSTM, Dropout, Input, Bidirectional, Lambda, TimeDistributed, Masking, Average
-#from keras_contrib.layers import CRF
 from tensorflow.keras import optimizers
 import keras.backend as K
 import csv
@@ -53,17 +49,11 @@ def load_fasttext(emb_file):
     return embeddings
 
 def embed_elmo(sentences, elmo_embedder, xlingual, normal=False, lang=''):
-    emb_batch = 256 #128 for et, 2<=n<8 for sv, en=?, others can use higher probably
-    #swedish has problem around sentences 1500-1800 in train (extra high ram usage)
-    #embedded = map(elmo_embedder.embed_sentence, sentences)
+    emb_batch = 256
     apply_mapping = apply_vecmap
 
     if elmo_embedder == 'preembedded':
-        #emb = [sent for batch in sentences for sent in batch]
-        #print(len(emb), len(emb[0]), len(emb[0][0]))
-        #sentences = None
         max_seqlen = max(len(s[0]) for s in sentences) if sentences else 0
-        #print(max_seqlen)
         if max_seqlen == 0:
             return []
         emb0 = np.full((len(sentences), max_seqlen, 1024), fill_value=-999.)
@@ -106,7 +96,7 @@ def main():
     parser.add_argument('--evlang', default='trg', type=str, help='src or trg when mapping eval file language')
     parser.add_argument("--bs", default=64, type=int, help="batch size")
     parser.add_argument("--epoch", default=3, type=int, help="number of epochs to train for")
-    parser.add_argument("--save", default="elmo_new_ner_model", type=str, help="Filename to save the NER model to")
+    parser.add_argument("--save", required=True, type=str, help="Filename to save the POS model to")
     args = parser.parse_args()
     
 
@@ -161,20 +151,12 @@ def main():
 
     max_len = None
     if args.embs:
-        fasttext = load_fasttext(args.embs) #ElmoEmbedder(args.options, args.weights, -1)
+        fasttext = load_fasttext(args.embs)
     else:
         fasttext = 'preembedded'
     # NN
-    #actfun = lambda x: activations.relu(x, alpha=0.5, max_value=30)
-    #input_cnn = Input(shape=(max_len,1024), dtype="float32")
-    #mask_cnn = Masking(mask_value=-999., input_shape=(max_len, 1024)) (input_cnn)
-    #input_lstm1 = Input(shape=(max_len,1024), dtype="float32")
-    #mask_lstm1 = Masking(mask_value=-999., input_shape=(max_len, 1024)) (input_lstm1)
-    #input_lstm2 = Input(shape=(max_len,1024), dtype="float32")
-    #mask_lstm2 = Masking(mask_value=-999., input_shape=(max_len, 1024)) (input_lstm2)
     input_layer = Input(shape=(max_len,300), dtype="float32")
     mask = Masking(mask_value=-999., input_shape=(max_len, 300)) (input_layer)
-    #avglayer = Average()([mask_cnn, mask_lstm1, mask_lstm2])
     bilstm1 = Bidirectional(LSTM(units=512, return_sequences=True)) (mask)
     bilstm1 = LeakyReLU() (bilstm1)
     bilstm2 = Bidirectional(LSTM(units=512, return_sequences=True)) (bilstm1)

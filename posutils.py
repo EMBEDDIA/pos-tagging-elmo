@@ -12,13 +12,10 @@ def encode_cat(category):
 
 def load_data(input_file):
     with open(input_file, "r", encoding='utf-8') as csvfile:
-        #csvreader = csv.reader(csvfile, delimiter='\t')
-        #next(csvreader)
         sentence = []
         labels = []
         X = []
         Y = []
-        #sentence_id = -1
         for row in csvfile:
             row = row.strip().split('\t')
             if len(row) < 2:
@@ -64,9 +61,7 @@ def pad_labels(labels):
     return lab0
 
 def embed_elmo(sentences, elmo_embedder, xlingual, normal=False, lang='', method='vecmap'):
-    emb_batch = 256 #128 for et, 2<=n<8 for sv, en=?, others can use higher probably
-    #swedish has problem around sentences 1500-1800 in train (extra high ram usage)
-    #embedded = map(elmo_embedder.embed_sentence, sentences)
+    emb_batch = 256
     if method=='vecmap':
         apply_mapping = apply_vecmap
     elif method=='muse':
@@ -77,11 +72,7 @@ def embed_elmo(sentences, elmo_embedder, xlingual, normal=False, lang='', method
         raise ValueError("Unsupported mapping method, use vecmap or muse.")
 
     if elmo_embedder == 'preembedded':
-        #emb = [sent for batch in sentences for sent in batch]
-        #print(len(emb), len(emb[0]), len(emb[0][0]))
-        #sentences = None
         max_seqlen = max(len(s[0]) for s in sentences) if sentences else 0
-        #print(max_seqlen)
         if max_seqlen == 0:
             return []
         emb0 = np.full((len(sentences), max_seqlen, 1024), fill_value=-999.)
@@ -109,9 +100,7 @@ def embed_elmo(sentences, elmo_embedder, xlingual, normal=False, lang='', method
     return embedded
 
 def embed_efml(sentences, elmo_embedder, xlingual, args, normal=False, lang='', method='vecmap'):
-    emb_batch = 256 #128 for et, 2<=n<8 for sv, en=?, others can use higher probably
-    #swedish has problem around sentences 1500-1800 in train (extra high ram usage)
-    #embedded = map(elmo_embedder.embed_sentence, sentences)
+    emb_batch = 256
     if method=='vecmap':
         apply_mapping = apply_vecmap
     elif method=='muse':
@@ -121,11 +110,7 @@ def embed_efml(sentences, elmo_embedder, xlingual, args, normal=False, lang='', 
     else:
         raise ValueError("Unsupported mapping method, use vecmap or muse.")
     if elmo_embedder == 'preembedded':
-        #emb = [sent for batch in sentences for sent in batch]
-        #print(len(emb), len(emb[0]), len(emb[0][0]))
-        #sentences = None
         max_seqlen = max(len(s[0]) for s in sentences) if sentences else 0
-        #print(max_seqlen)
         if max_seqlen == 0:
             return []
         max_seqlen = max(max_seqlen, 256)
@@ -157,11 +142,9 @@ def embed_efml(sentences, elmo_embedder, xlingual, args, normal=False, lang='', 
 
 
 def embed_elmogan(sentences, elmo_embedder, xlingual, args):
-    emb_batch = 256 #128 for et, 2<=n<8 for sv, en=?, others can use higher probably
-    #swedish has problem around sentences 1500-1800 in train (extra high ram usage)
+    emb_batch = 256
     if elmo_embedder == 'preembedded':
         max_seqlen = max(len(s[0]) for s in sentences) if sentences else 0
-        #print(max_seqlen)
         if max_seqlen == 0:
             return []
         max_seqlen = max(max_seqlen, 256)

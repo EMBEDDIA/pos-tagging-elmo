@@ -1,11 +1,7 @@
 from numpy.random import seed
 seed(3)
-#from tensorflow import set_random_seed
-#set_random_seed(3)
 import tensorflow as tf
 from tensorflow.keras.models import Model, load_model
-#from keras.layers import Dense, LSTM, Dropout, Input, Bidirectional, Lambda, TimeDistributed, Masking, Average
-#from keras_contrib.layers import CRF
 from keras import optimizers, losses
 import keras.backend as K
 import torch
@@ -13,7 +9,6 @@ import csv
 import numpy as np
 import argparse
 from sklearn.metrics import confusion_matrix, f1_score
-#from allennlp.commands.elmo import ElmoEmbedder
 from elmoformanylangs import Embedder
 from math import ceil
 from extra.apply_vecmap_transform import vecmap
@@ -85,38 +80,32 @@ def generate_batch_data(inputfile, batch_size, args):
             assert len(newxval) == len(yval)
             if i > 0 and i % batch_size == 0:
                 xval0, xval1, xval2 = embed_efml(newxval, elmo, xlingual, args, lang=args.evlang, method=args.mapping)
-                #ypadded = pad_labels(yval)
                 yield ([np.array(xval0), np.array(xval1), np.array(xval2)], np.array(yval))
                 newxval = []
                 yval = []
         if len(newxval) > 0:
             xval0, xval1, xval2 = embed_efml(newxval, elmo, xlingual, args, lang=args.evlang, method=args.mapping)
-            #ypadded = pad_labels(yval)
             yield ([np.array(xval0), np.array(xval1), np.array(xval2)], np.array(yval))
 
-    
 def main():
 
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--test_file", default=None, type=str, required=True)
-    #parser.add_argument("--options", default=None, type=str, required=True, help="elmo options file")
-    parser.add_argument("--weights", default=None, type=str, required=False, help="elmo weights file")
-    #parser.add_argument("--train_len", default=0, type=int, required=True)
+    parser.add_argument("--weights", default=None, type=str, required=False, help="efml weights file")
     parser.add_argument("--test_len", default=0, type=int, required=True)
     parser.add_argument('--mat0', help='mapping matrices for layer0 (.npz), optional')
     parser.add_argument('--mat1', help='mapping matrices for layer1 (.npz), optional')
     parser.add_argument('--mat2', help='mapping matrices for layer2 (.npz), optional')
-    #parser.add_argument('--trlang', default='trg', type=str, help='src or trg when mapping train file language')
     parser.add_argument('--evlang', default='src', type=str, help='if mapping with vecmap, was test language "src" or "trg" during mapping')
     parser.add_argument('--mapping','--method', help='mapping method, choose among: vecmap, muse, elmogan. No mapping assumed otherwise.')
     parser.add_argument("--bs", default=64, type=int, help="batch size")
-    parser.add_argument("--save", default="elmo_new_ner_model", type=str, help="path to trained elmo NER model")
+    parser.add_argument("--save", required=True, type=str, help="path to trained efml POS model")
     parser.add_argument("--output", type=str, help="where to save predictions")
-    parser.add_argument('--direction', type=int)
+    parser.add_argument('--direction', type=int, help="if mapping with elmogan, which direction is used, first lang to second (0) or second to first (1)")
     parser.add_argument('--normalize', action="store_true")
     args = parser.parse_args()
-    
+
 
 
     max_len = None

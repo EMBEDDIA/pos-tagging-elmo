@@ -1,18 +1,13 @@
 from numpy.random import seed
 seed(3)
-#from tensorflow import set_random_seed
-#set_random_seed(3)
-#import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, LSTM, Dropout, Input, Bidirectional, Lambda, TimeDistributed, Masking, Average
-#from keras_contrib.layers import CRF
 from tensorflow.keras import optimizers
 import keras.backend as K
 import csv
 import numpy as np
 import argparse
 from sklearn.metrics import confusion_matrix, f1_score
-#from allennlp.commands.elmo import ElmoEmbedder
 from elmoformanylangs import Embedder
 from math import ceil
 from extra.apply_vecmap_transform import vecmap
@@ -22,17 +17,11 @@ from tensorflow.keras.layers import LeakyReLU
 import pickle
 
 def embed_elmo(sentences, elmo_embedder, xlingual, normal=False, lang=''):
-    emb_batch = 256 #128 for et, 2<=n<8 for sv, en=?, others can use higher probably
-    #swedish has problem around sentences 1500-1800 in train (extra high ram usage)
-    #embedded = map(elmo_embedder.embed_sentence, sentences)
+    emb_batch = 256
     apply_mapping = apply_vecmap
 
     if elmo_embedder == 'preembedded':
-        #emb = [sent for batch in sentences for sent in batch]
-        #print(len(emb), len(emb[0]), len(emb[0][0]))
-        #sentences = None
         max_seqlen = max(len(s[0]) for s in sentences) if sentences else 0
-        #print(max_seqlen)
         if max_seqlen == 0:
             return []
         emb0 = np.full((len(sentences), max_seqlen, 1024), fill_value=-999.)
@@ -65,7 +54,6 @@ def main():
 
     parser.add_argument("--train_file", default=None, type=str, required=True)
     parser.add_argument("--eval_file", default=None, type=str, required=True)
-    #parser.add_argument("--options", default=None, type=str, help="elmo options file")
     parser.add_argument("--weights", default=None, type=str, help="elmo weights file, skip if pre-embedded")
     parser.add_argument("--train_len", default=0, type=int, required=True, help="number of tokens in train file")
     parser.add_argument("--eval_len", default=0, type=int, required=True, help="number of tokens in evaluation file")
@@ -76,7 +64,7 @@ def main():
     parser.add_argument('--evlang', default='trg', type=str, help='src or trg when mapping eval file language')
     parser.add_argument("--bs", default=64, type=int, help="batch size")
     parser.add_argument("--epoch", default=3, type=int, help="number of epochs to train for")
-    parser.add_argument("--save", default="elmo_new_ner_model", type=str, help="Filename to save the NER model to")
+    parser.add_argument("--save", required=True, type=str, help="Filename to save the POS model to")
     args = parser.parse_args()
     
 
@@ -110,12 +98,8 @@ def main():
             if elmo == 'preembedded':
                 with open(inputfile+'.efml-embs.pickle', 'rb') as f:
                     xembedded = pickle.load(f)
-#                   print(len(xembedded), len(xembedded[0]), len(xembedded[0][0]), len(xembedded[0][0][0]))
-#                   print(len(xembedded), len(xembedded[1]), len(xembedded[1][0]), len(xembedded[1][0][0]))
-#                   print(len(xembedded), len(xembedded[0]), len(xembedded[0][1]), len(xembedded[0][1][0]))
-#                   print(len(xembedded), len(xembedded[2]), len(xembedded[0][2]), len(xembedded[0][2][1]))
                     xembedded = [sent for batch in xembedded for sent in batch]
-            print("INPUT SIZES X AND Y", len(x), len(y), len(x[0]), len(y[0]))
+            #print("INPUT SIZES X AND Y", len(x), len(y), len(x[0]), len(y[0]))
             assert len(x) == len(y)
             newxval = []
             yval = []
@@ -146,7 +130,6 @@ def main():
     max_len = None
     
     # NN
-    #actfun = lambda x: activations.relu(x, alpha=0.5, max_value=30)
     input_cnn = Input(shape=(max_len,1024), dtype="float32")
     mask_cnn = Masking(mask_value=-999., input_shape=(max_len, 1024)) (input_cnn)
     input_lstm1 = Input(shape=(max_len,1024), dtype="float32")

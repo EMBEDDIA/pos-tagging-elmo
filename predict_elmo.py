@@ -1,11 +1,7 @@
 from numpy.random import seed
 seed(3)
-#from tensorflow import set_random_seed
-#set_random_seed(3)
 import tensorflow as tf
 from tensorflow.keras.models import Model, load_model
-#from keras.layers import Dense, LSTM, Dropout, Input, Bidirectional, Lambda, TimeDistributed, Masking, Average
-#from keras_contrib.layers import CRF
 from keras import optimizers, losses
 import keras.backend as K
 import torch
@@ -28,9 +24,7 @@ def csd2(x,y):
     return 1.0*losses.cosine_proximity(x,y)+0.5*losses.mean_absolute_error(x,y)
 
 def embed_elmo(sentences, elmo_embedder, xlingual, args, normal=False, lang='', method='vecmap'):
-    emb_batch = 256 #128 for et, 2<=n<8 for sv, en=?, others can use higher probably
-    #swedish has problem around sentences 1500-1800 in train (extra high ram usage)
-    #embedded = map(elmo_embedder.embed_sentence, sentences)
+    emb_batch = 256
     if not method or method=='vecmap':
         apply_mapping = apply_vecmap
     elif method=='muse':
@@ -41,11 +35,7 @@ def embed_elmo(sentences, elmo_embedder, xlingual, args, normal=False, lang='', 
         raise ValueError("Unsupported mapping method, use vecmap or muse.")
 
     if elmo_embedder == 'preembedded':
-        #emb = [sent for batch in sentences for sent in batch]
-        #print(len(emb), len(emb[0]), len(emb[0][0]))
-        #sentences = None
         max_seqlen = max(len(s[0]) for s in sentences) if sentences else 0
-        #print(max_seqlen)
         if max_seqlen == 0:
             return []
         max_seqlen = max(max_seqlen, 256)
@@ -63,9 +53,6 @@ def embed_elmo(sentences, elmo_embedder, xlingual, args, normal=False, lang='', 
         emb1 = np.full((len(sentences), max_seqlen, 1024), fill_value=-999.)
         emb2 = np.full((len(sentences), max_seqlen, 1024), fill_value=-999.)
     for x,sentence in enumerate(emb):
-        #if normal:
-        #    for i in range(3):
-        #        normalize(sentence[i])
         seqlen = sentence[0].shape[0]
         emb0[x, 0:seqlen, :] = apply_mapping(sentence[0], xlingual[0], lang)
         emb1[x, 0:seqlen, :] = apply_mapping(sentence[1], xlingual[1], lang)
@@ -129,13 +116,11 @@ def generate_batch_data(inputfile, batch_size, args):
             assert len(newxval) == len(yval)
             if i > 0 and i % batch_size == 0:
                 xval0, xval1, xval2 = embed_elmo(newxval, elmo, xlingual, args, lang=args.evlang, method=args.mapping)
-                #ypadded = pad_labels(yval)
                 yield ([np.array(xval0), np.array(xval1), np.array(xval2)], np.array(yval))
                 newxval = []
                 yval = []
         if len(newxval) > 0:
             xval0, xval1, xval2 = embed_elmo(newxval, elmo, xlingual, args, lang=args.evlang, method=args.mapping)
-            #ypadded = pad_labels(yval)
             yield ([np.array(xval0), np.array(xval1), np.array(xval2)], np.array(yval))
 
     
@@ -146,18 +131,16 @@ def main():
     parser.add_argument("--test_file", default=None, type=str, required=True)
     parser.add_argument("--options", default=None, type=str, required=False, help="elmo options file")
     parser.add_argument("--weights", default=None, type=str, required=False, help="elmo weights file")
-    #parser.add_argument("--train_len", default=0, type=int, required=True)
     parser.add_argument("--test_len", default=0, type=int, required=True)
     parser.add_argument('--mat0', help='mapping matrices for layer0 (.npz), optional')
     parser.add_argument('--mat1', help='mapping matrices for layer1 (.npz), optional')
     parser.add_argument('--mat2', help='mapping matrices for layer2 (.npz), optional')
-    #parser.add_argument('--trlang', default='trg', type=str, help='src or trg when mapping train file language')
     parser.add_argument('--evlang', default='src', type=str, help='if mapping with vecmap, was test language "src" or "trg" during mapping')
     parser.add_argument('--mapping','--method', help='mapping method, choose among: vecmap, muse, elmogan. No mapping assumed otherwise.')
     parser.add_argument("--bs", default=64, type=int, help="batch size")
-    parser.add_argument("--save", default="elmo_new_ner_model", type=str, help="path to trained elmo NER model")
+    parser.add_argument("--save", required=True, type=str, help="path to trained elmo POS  model")
     parser.add_argument("--output", type=str, help="where to save predictions")
-    parser.add_argument('--direction', type=int)
+    parser.add_argument('--direction', type=int, help="if mapping with elmogan, which direction is used, first lang to second (0) or second to first (1)")
     parser.add_argument('--normalize', action="store_true")
     args = parser.parse_args()
     
