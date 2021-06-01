@@ -64,8 +64,8 @@ def main():
 
     parser.add_argument("--train_file", default=None, type=str, required=True)
     parser.add_argument("--eval_file", default=None, type=str, required=True)
-    parser.add_argument("--options", default=None, type=str, help="elmo options file")
-    parser.add_argument("--weights", default=None, type=str, help="elmo weights file")
+    parser.add_argument("--options", default=None, type=str, help="elmo options file, skip if pre-embedded")
+    parser.add_argument("--weights", default=None, type=str, help="elmo weights file, skip if pre-embedded")
     parser.add_argument("--train_len", default=0, type=int, required=True, help="number of tokens in train file")
     parser.add_argument("--eval_len", default=0, type=int, required=True, help="number of tokens in evaluation file")
     parser.add_argument('--mat0', help='mapping matrices for layer0 (.npz), do not specify for monolingual setting')
