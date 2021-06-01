@@ -24,9 +24,9 @@ Evaluate the classifier using `predict_fasttext.py`, `predict_efml.py` or  `pred
 ## Requirements
 The following python3 packages are required to train and evaluate the POS-tagging classifier:
 
-`numpy`
-`keras`
-`sklearn`
-`tensorflow` (as keras backend)
-`allennlp==0.9.0` (ELMo only)
-`elmoformanylangs` (ElmoForManyLangs only)
+* `numpy`
+* `keras`
+* `sklearn`
+* `tensorflow` (as keras backend)
+* `allennlp==0.9.0` (ELMo only)
+* `elmoformanylangs` (ElmoForManyLangs only)
