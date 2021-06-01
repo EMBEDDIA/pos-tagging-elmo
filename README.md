@@ -20,3 +20,13 @@ changes both source and target language vectors.
 
 **Step 2:**
 Evaluate the classifier using `predict_fasttext.py`, `predict_efml.py` or  `predict_elmo.py`. Provide the necessary mapping files if using any cross-lingual approach.
+
+## Requirements
+The following python3 packages are required to train and evaluate the POS-tagging classifier:
+
+`numpy`
+`keras`
+`sklearn`
+`tensorflow` (as keras backend)
+`allennlp==0.9.0` (ELMo only)
+`elmoformanylangs` (ElmoForManyLangs only)

@@ -8,7 +8,6 @@ import csv
 import numpy as np
 import argparse
 from sklearn.metrics import confusion_matrix, f1_score
-from allennlp.commands.elmo import ElmoEmbedder
 from math import ceil
 from extra.apply_vecmap_transform import vecmap
 from posutils import load_data, pad_labels, apply_vecmap, normalize
@@ -48,37 +47,6 @@ def load_fasttext(emb_file):
                 continue
     return embeddings
 
-def embed_elmo(sentences, elmo_embedder, xlingual, normal=False, lang=''):
-    emb_batch = 256
-    apply_mapping = apply_vecmap
-
-    if elmo_embedder == 'preembedded':
-        max_seqlen = max(len(s[0]) for s in sentences) if sentences else 0
-        if max_seqlen == 0:
-            return []
-        emb0 = np.full((len(sentences), max_seqlen, 1024), fill_value=-999.)
-        emb1 = np.full((len(sentences), max_seqlen, 1024), fill_value=-999.)
-        emb2 = np.full((len(sentences), max_seqlen, 1024), fill_value=-999.)
-        emb = sentences
-        sentences = None
-    else: # not pre-embedded
-        max_seqlen = max(len(s) for s in sentences) if sentences else 0
-        if max_seqlen == 0:
-            return []
-        emb = elmo_embedder.embed_batch(sentences)
-        emb0 = np.full((len(sentences), max_seqlen, 1024), fill_value=-999.)
-        emb1 = np.full((len(sentences), max_seqlen, 1024), fill_value=-999.)
-        emb2 = np.full((len(sentences), max_seqlen, 1024), fill_value=-999.)
-    for x,sentence in enumerate(emb):
-        if normal:
-            for i in range(3):
-                normalize(sentence[i])
-        seqlen = sentence[0].shape[0]
-        emb0[x, 0:seqlen, :] = apply_mapping(sentence[0], xlingual[0], lang)
-        emb1[x, 0:seqlen, :] = apply_mapping(sentence[1], xlingual[1], lang)
-        emb2[x, 0:seqlen, :] = apply_mapping(sentence[2], xlingual[2], lang)
-    embedded = [emb0, emb1, emb2]
-    return embedded
 
 def main():
 
